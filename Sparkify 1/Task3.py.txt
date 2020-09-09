@@ -1,0 +1,104 @@
+from flask import render_template
+import pymongo
+from pymongo import MongoClient
+from flask import Flask
+
+client = MongoClient ('localhost', 27017)
+db = client['mydb']
+
+app = Flask(__name__)
+@app.route("/")
+
+def log():
+    s1 = list(db.w1.aggregate([{"$unwind": "$song"}, {"$sortByCount": "$song"}, { "$limit" : 10 }]))
+    a1 = list(db.w1.aggregate([{"$unwind": "$artist"}, {"$sortByCount": "$artist"}, { "$limit" : 10 }]))
+    s2 = list(db.w2.aggregate([{"$unwind": "$song"}, {"$sortByCount": "$song"}, { "$limit" : 10 }]))
+    a2 = list(db.w2.aggregate([{"$unwind": "$artist"}, {"$sortByCount": "$artist"}, { "$limit" : 10 }]))
+    s3 = list(db.w3.aggregate([{"$unwind": "$song"}, {"$sortByCount": "$song"}, { "$limit" : 10 }]))
+    a3 = list(db.w3.aggregate([{"$unwind": "$artist"}, {"$sortByCount": "$artist"}, { "$limit" : 10 }]))
+    s4 = list(db.w4.aggregate([{"$unwind": "$song"}, {"$sortByCount": "$song"}, { "$limit" : 10 }]))
+    a4 = list(db.w4.aggregate([{"$unwind": "$artist"}, {"$sortByCount": "$artist"}, { "$limit" : 10 }]))
+    values = s1 + a1 +s2 + a2+ s3 + a3 +s4 + a4
+    with app.app_context(), app.test_request_context():
+            template = render_template('log.html',val=values)
+    return template
+
+
+log()
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------
+
+#Creating log.html render_template file in another directory called template (within same directory)
+
+<html>
+<head>
+<title>Weekly top 10 Songs and Artists</title>
+</head>
+<body>
+<h1 style="color:green;">Top 10 Songs in Week 1</h1>
+<ol>
+
+{%for i in range(10)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 2</h1>
+<ol>
+{%for i in range(10,20)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+
+</ol>
+
+<h1 style="color:green;">Top 10 Songs in Week 2</h1>
+<ol>
+
+{%for i in range(20,30)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 2</h1>
+<ol>
+{%for i in range(30,40)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+
+</ol>
+<h1 style="color:green;">Top 10 Songs in Week 3</h1>
+<ol>
+
+{%for i in range(40,50)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 3</h1>
+<ol>
+
+{%for i in range(50,60)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+
+</ol>
+<h1 style="color:green;">Top 10 Songs in Week 4</h1>
+<ol>
+
+{%for i in range(60,70)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 4</h1>
+<ol>
+{%for i in range(70,80)%}
+        <li>{{val[i]['_id']}}</li>
+{%endfor%}
+
+</ol>
+</body>
+</html>

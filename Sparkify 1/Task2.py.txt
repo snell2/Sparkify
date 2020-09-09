@@ -1,0 +1,35 @@
+import os, json
+import pymongo
+from pymongo import MongoClient
+import glob
+
+client = MongoClient ('localhost', 27017)
+db = client['mydb']
+#log = db['log_data']
+w1 = db.log_data1
+w2 = db.log_data2
+w3 = db.log_data3
+w4 = db.log_data4
+
+path_to_json = "./"
+json_pattern = os.path.join(path_to_json,'*.json')
+file_list = glob.glob(json_pattern)
+for file in file_list:
+   name = str(file)
+   dat = int(name[10:12])
+   if 0<dat<=7:
+      for line in open(file,'r'):
+          db.w1.insert_one(json.loads(line))
+   elif 7<dat<=14:
+      for line in open(file,'r'):
+          db.w2.insert_one(json.loads(line))
+   elif 14<dat<=21:
+      for line in open(file,'r'):
+          db.w3.insert_one(json.loads(line))
+   else:
+      for line in open(file,'r'):
+          db.w4.insert_one(json.loads(line))
+
+
+
+
