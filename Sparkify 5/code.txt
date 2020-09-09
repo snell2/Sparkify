@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+
+#reducer
+
+import sys
+c_word = None
+c_count = 0
+word = None
+
+for line in sys.stdin:
+    line = line.strip()
+    word, count = line.split('\t')
+    count = int(count)
+    if c_word == word:
+       c_count += count
+    else:
+       if c_word:
+          print ('%s\t%s' % (c_word, c_count))
+       c_count = count
+       c_word = word
+
+if c_word == word:
+  print ('%s\t%s' % (c_word,c_count))
+------------------------------------------------------------
+
+#mapper
+
+#!/usr/bin/python
+import sys
+import json
+lst=[]
+for line in sys.stdin:
+    dic=line.split("\n")
+    for d in dic:
+        lst.append(d)
+
+while("" in lst):
+    lst.remove("")
+
+for item in lst:
+    s=json.loads(item)
+    for val in s.values():
+        print('%s\t%s'%(val,1))
+
+
+
+
