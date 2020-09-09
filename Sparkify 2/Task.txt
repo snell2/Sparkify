@@ -1,0 +1,152 @@
+# Code for INSERTING the json type objects from JSON files into the database using PostGres
+
+import psycopg2
+import json
+import os
+import glob
+from psycopg2.extras import Json
+
+path_to_json = "./"
+json_pattern = os.path.join(path_to_json,'*.json')
+file_list = glob.glob(json_pattern)
+conn = psycopg2.connect(database="postgres", user="postgres", password="QDxT0LzGdAT8QO5EGuEQ",host="sparkifydb.cj4h0edjpgk6.us-east-1.rds.amazonaws.com",port="5432")
+cur= conn.cursor()
+
+for file in file_list:
+    name = str(file)
+    date = int(name[10:12])
+    if (0<date<=7):
+       w = 1
+    elif (7<date<=14):
+       w = 2
+    elif (14<date<21):
+       w = 3
+    else:
+       w = 4
+    with open(file,'r') as f:
+         for line in f:
+             up=json.loads(line)
+             up["week"]  = w
+             keys = list(up.keys())
+             values = list(up.values())
+             cur.execute("INSERT INTO raw_events VALUES({})".format(Json(up)))
+#cur.execute("DROP TABLE raw_events")
+#print("Dropped table")
+
+conn.commit()
+print("successfully inserted records")
+conn.close()
+
+print("connection is closed")
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+# Code for SELECTING and Displaying Weekly wise Songs and Artists
+from flask import render_template
+import psycopg2
+from flask import Flask
+
+conn = psycopg2.connect(database="postgres", user="postgres", password="QDxT0LzGdAT8QO5EGuEQ",host="sparkifydb.cj4h0edjpgk6.us-east-1.rds.amazonaws.com",port="5432")
+cur= conn.cursor()
+
+app = Flask(__name__)
+@app.route("/")
+
+
+def log():
+    cur.execute("SELECT status->>'song' AS song FROM raw_events where status ->>'week' = '1' AND status->>'song' notNull  GROUP BY status ->>'song' ORDER BY count(status ->>'song') desc limit 10;")
+    song1=cur.fetchall()
+    cur.execute("SELECT status->>'song' AS song FROM raw_events where status ->>'week' = '2' AND status->>'song' notNull  GROUP BY status ->>'song' ORDER BY count(status ->>'song') desc limit 10;")
+    song2=cur.fetchall()
+    cur.execute("SELECT status->>'song' AS song FROM raw_events where status ->>'week' = '3' AND status->>'song' notNull  GROUP BY status ->>'song' ORDER BY count(status ->>'song') desc limit 10;")
+    song3=cur.fetchall()
+    cur.execute("SELECT status->>'song' AS song FROM raw_events where status ->>'week' = '4' AND status->>'song' notNull  GROUP BY status ->>'song' ORDER BY count(status ->>'song') desc limit 10;")
+    song4=cur.fetchall()
+
+    cur.execute("SELECT status->>'artist' AS Artist FROM raw_events where status ->>'week' = '1' AND status->>'artist' notNull  GROUP BY status ->>'artist' ORDER BY count(status ->>'artist') desc limit 10;")
+    artist1=cur.fetchall()
+    cur.execute("SELECT status->>'artist' AS Artist FROM raw_events where status ->>'week' = '2' AND status->>'artist' notNull  GROUP BY status ->>'artist' ORDER BY count(status ->>'artist') desc limit 10;")
+    artist2=cur.fetchall()
+    cur.execute("SELECT status->>'artist' AS Artist FROM raw_events where status ->>'week' = '3' AND status->>'artist' notNull  GROUP BY status ->>'artist' ORDER BY count(status ->>'artist') desc limit 10;")
+    artist3=cur.fetchall()
+    cur.execute("SELECT status->>'artist' AS Artist FROM raw_events where status ->>'week' = '4' AND status->>'artist' notNull  GROUP BY status ->>'artist' ORDER BY count(status ->>'artist') desc limit 10;")
+    artist4=cur.fetchall()
+     
+    with app.app_context(), app.test_request_context():
+         template = render_template('log.html',s1=song1,s2=song2,s3=song3,s4=song4,a1=artist1,a2=artist2,a3=artist3,a4=artist4)
+    return template
+
+log()
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#Creating log.html render_template file in another directory called template (within same directory)
+
+<html>
+<head>
+<title>Weekly top 10 Songs and Artists</title>
+</head>
+<body>
+<h1 style="color:green;">Top 10 Songs in Week 1</h1>
+<ol>
+
+{%for val in s1%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 2</h1>
+<ol>
+{%for val in a1%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+
+</ol>
+
+<h1 style="color:green;">Top 10 Songs in Week 2</h1>
+<ol>
+
+{%for val in s2%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 2</h1>
+<ol>
+{%for val in a2%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+
+</ol>
+<h1 style="color:green;">Top 10 Songs in Week 3</h1>
+<ol>
+
+{%for val in s3%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 3</h1>
+<ol>
+
+{%for val in a3%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+
+</ol>
+<h1 style="color:green;">Top 10 Songs in Week 4</h1>
+<ol>
+
+{%for val in s4%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+</ol>
+
+<h1 style="color:blue;">Top 10 Artists in Week 4</h1>
+<ol>
+{%for val in a4%}
+        <li>{{val[0]}}</li>
+{%endfor%}
+
+</ol>
+</body>
+</html>
